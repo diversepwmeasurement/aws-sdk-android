@@ -1,50 +1,78 @@
-name: Prepare Next Release
-on:
-  workflow_dispatch:
 env:
-  GIT_USER_NAME: awsmobilesdk-dev+ghops
-  GIT_USER_EMAIL: awsmobilesdk-dev+ghops@amazon.com
   BASE_BRANCH: main
+  GIT_USER_EMAIL: awsmobilesdk-dev+ghops@amazon.com
+  GIT_USER_NAME: awsmobilesdk-dev+ghops
 jobs:
   create_pr_for_next_release:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-    - name: Update git
-      run: |
-        sudo add-apt-repository -y ppa:git-core/ppa
+    - continue-on-error: true
+      name: Update git
+      run: 'sudo add-apt-repository -y ppa:git-core/ppa
+
         sudo apt-get update
+
         sudo apt-get install git -y
-    - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+
+        '
+    - continue-on-error: true
+      uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
       with:
-        ref: ${{ env.BASE_BRANCH }}
         fetch-depth: 0
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@8575951200e472d5f2d95c625da0c7bec8217c42 # v1.161.0
+        ref: ${{ env.BASE_BRANCH }}
+    - continue-on-error: true
+      name: Set up Ruby
+      uses: ruby/setup-ruby@8575951200e472d5f2d95c625da0c7bec8217c42
       with:
-        ruby-version: "3.0"
-    - name: Install dependencies
-      run: |
-        cd build-support
+        ruby-version: '3.0'
+    - continue-on-error: true
+      name: Install dependencies
+      run: 'cd build-support
+
         gem install bundler
+
         bundle install
-    - name: Configure git options
-      run: |
-        cd build-support
-        bundle exec fastlane android configure_git_options git_user_email:$GIT_USER_EMAIL git_user_name:$GIT_USER_NAME
-    - name: Create/checkout a branch for the release
-      run: |
-        branch_name=bump_version
+
+        '
+    - continue-on-error: true
+      name: Configure git options
+      run: 'cd build-support
+
+        bundle exec fastlane android configure_git_options git_user_email:$GIT_USER_EMAIL
+        git_user_name:$GIT_USER_NAME
+
+        '
+    - continue-on-error: true
+      name: Create/checkout a branch for the release
+      run: 'branch_name=bump_version
+
         git fetch --all
-        (git branch -D $branch_name &>/dev/null) && (echo 'Existing $branch_name branch deleted') || (echo 'No existing $branch_name branch to delete.')
+
+        (git branch -D $branch_name &>/dev/null) && (echo ''Existing $branch_name
+        branch deleted'') || (echo ''No existing $branch_name branch to delete.'')
+
         git checkout -b $branch_name
-    - name: Create PR for next release
+
+        '
+    - continue-on-error: true
       env:
         RELEASE_MANAGER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        cd build-support
+      name: Create PR for next release
+      run: 'cd build-support
+
         bundle exec fastlane android create_next_release_pr
-    - name: Check modified file content
-      run: |
-        cat gradle.properties
+
+        '
+    - continue-on-error: true
+      name: Check modified file content
+      run: 'cat gradle.properties
+
         cat CHANGELOG.md
+
         git status
+
+        '
+name: Prepare Next Release
+on:
+  repository_dispatch:
+    types: trigger-ga___release_pr.yml
